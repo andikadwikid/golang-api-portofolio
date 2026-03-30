@@ -2,42 +2,57 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
 
 	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
-	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var DB *mongo.Database
 
 func Connect() {
+	// Load environment variables
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("❌ Error loading .env file")
 	}
 
-	uri := os.Getenv("MONGO_URI")
-	dbName := os.Getenv("MONGO_DB")
+	// Get URI and database name from .env file
+	mongoURI := os.Getenv("MONGO_URI")
+	databaseName := os.Getenv("MONGO_DB")
 
+	if mongoURI == "" {
+		log.Fatal("❌ MONGO_URI is not set in .env")
+	}
+	if databaseName == "" {
+		log.Fatal("❌ DB_NAME is not set in .env")
+	}
+
+	// Set up connection options
+	clientOptions := options.Client().ApplyURI(mongoURI)
+
+	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(options.Client().ApplyURI(uri))
+	// Connect to MongoDB
+	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		log.Fatal("Error connecting to MongoDB:", err)
+		log.Fatal("❌ MongoDB connection error:", err)
 	}
 
-	// cek koneksi
-	err = client.Ping(ctx, readpref.Primary())
+	// Ping the database to test connection
+	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Fatal("MongoDB not responding:", err)
+		log.Fatal("❌ MongoDB ping error:", err)
 	}
 
-	DB = client.Database(dbName)
+	fmt.Println("✅ Connected to MongoDB Atlas!")
 
-	log.Println("✅ Connected to MongoDB")
+	// Set the selected database
+	DB = client.Database(databaseName)
 }

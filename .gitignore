@@ -29,3 +29,5 @@ go.work.sum
 backend/tmp/
 backend/public/
 .air.toml
+*.tmp/
+tmp/
