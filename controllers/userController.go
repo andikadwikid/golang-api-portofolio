@@ -17,10 +17,10 @@ import (
 )
 
 func RegisterUser(c *gin.Context) {
-	var user models.CreateUserInput
+	var input models.CreateUserInput
 
-	// Bind JSON
-	if err := c.ShouldBindJSON(&user); err != nil {
+	// Bind & validate
+	if err := c.ShouldBindJSON(&input); err != nil {
 		validationErrors := utils.FormatValidationError(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"errors": validationErrors,
@@ -29,16 +29,17 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	// Normalize email
-	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
+	input.Email = strings.ToLower(strings.TrimSpace(input.Email))
 
 	collection := database.DB.Collection("users")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Check existing user
-	var existingUser models.CreateUserInput
-	err := collection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&existingUser)
+	// Check existing email
+	var existingUser models.User
+	err := collection.FindOne(ctx, bson.M{"email": input.Email}).Decode(&existingUser)
+
 	if err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already registered"})
 		return
@@ -49,26 +50,38 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	// Hash password
-	hashedPassword, err := utils.HashPassword(user.Password)
+	hashedPassword, err := utils.HashPassword(input.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
 
-	user.Password = hashedPassword
+	// Mapping ke model DB
+	user := models.User{
+		ID:        primitive.NewObjectID(),
+		Name:      input.Name,
+		Username:  input.Username,
+		Email:     input.Email,
+		Password:  hashedPassword,
+		Avatar:    "",
+		Bio:       "",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 
-	user.ID = primitive.NewObjectID()
-	user.CreatedAt = time.Now()
-
+	// Insert ke Mongo
 	result, err := collection.InsertOne(ctx, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Convert ID ke string
+	insertedID := result.InsertedID.(primitive.ObjectID)
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "User registered successfully",
-		"id":      result.InsertedID,
+		"id":      insertedID.Hex(),
 	})
 }
 
@@ -121,15 +134,15 @@ func GetUsers(c *gin.Context) {
 	defer cancel()
 
 	collection := database.DB.Collection("users")
-	cursur, err := collection.Find(ctx, bson.M{})
+	cursor, err := collection.Find(ctx, bson.M{})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error fetching users"})
 		return
 	}
-	defer cursur.Close(ctx)
+	defer cursor.Close(ctx)
 
 	var users []models.UserResponse
-	if err := cursur.All(ctx, &users); err != nil {
+	if err := cursor.All(ctx, &users); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error parsing users"})
 		return
 	}
@@ -137,9 +150,12 @@ func GetUsers(c *gin.Context) {
 	var userslist []models.UserResponse
 	for _, u := range users {
 		userslist = append(userslist, models.UserResponse{
-			ID:    u.ID,
-			Name:  u.Name,
-			Email: u.Email,
+			ID:        u.ID,
+			Name:      u.Name,
+			Email:     u.Email,
+			Avatar:    u.Avatar,
+			Bio:       u.Bio,
+			CreatedAt: u.CreatedAt,
 		})
 	}
 	c.JSON(http.StatusOK, userslist)

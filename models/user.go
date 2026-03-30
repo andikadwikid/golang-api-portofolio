@@ -6,6 +6,18 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type User struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	Name      string             `bson:"name"`
+	Username  string             `bson:"username"`
+	Email     string             `bson:"email"`
+	Password  string             `bson:"password"`
+	Avatar    string             `bson:"avatar,omitempty"`
+	Bio       string             `bson:"bio,omitempty"`
+	CreatedAt time.Time          `bson:"created_at"`
+	UpdatedAt time.Time          `bson:"updated_at"`
+}
+
 type UserLoginInput struct {
 	ID       primitive.ObjectID `json:"id"`
 	Email    string             `json:"email" binding:"required,email"`
@@ -33,7 +45,11 @@ type UpdateUserInput struct {
 }
 
 type UserResponse struct {
-	ID    primitive.ObjectID `json:"id"`
-	Name  string             `json:"name"`
-	Email string             `json:"email"`
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	Avatar    string    `json:"avatar,omitempty"`
+	Bio       string    `json:"bio,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 }
