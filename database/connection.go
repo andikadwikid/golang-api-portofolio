@@ -1,17 +1,18 @@
 package database
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"os"
-	"portofolio-api/models"
+	"time"
 
 	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 )
 
-var DB *gorm.DB
+var DB *mongo.Database
 
 func Connect() {
 	err := godotenv.Load()
@@ -19,19 +20,24 @@ func Connect() {
 		log.Fatal("Error loading .env file")
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"),
-	)
+	uri := os.Getenv("MONGO_URI")
+	dbName := os.Getenv("MONGO_DB")
 
-	DB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
+	client, err := mongo.Connect(options.Client().ApplyURI(uri))
 	if err != nil {
-		log.Fatal("Error connecting to database")
+		log.Fatal("Error connecting to MongoDB:", err)
 	}
 
-	DB.AutoMigrate(&models.User{})
+	// cek koneksi
+	err = client.Ping(ctx, readpref.Primary())
+	if err != nil {
+		log.Fatal("MongoDB not responding:", err)
+	}
+
+	DB = client.Database(dbName)
+
+	log.Println("✅ Connected to MongoDB")
 }

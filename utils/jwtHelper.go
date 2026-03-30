@@ -5,23 +5,25 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
+func getSecret() []byte {
+	return []byte(os.Getenv("JWT_SECRET"))
+}
 
-func GenerateJWT(userID uuid.UUID) (string, error) {
+func GenerateJWT(userID primitive.ObjectID) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id": userID,
+		"user_id": userID.Hex(),
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString(getSecret())
 }
 
 func VerifyJWT(tokenString string) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return getSecret(), nil
 	})
 }
