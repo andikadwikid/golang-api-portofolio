@@ -19,33 +19,33 @@ type User struct {
 }
 
 type UserLoginInput struct {
-	ID       primitive.ObjectID `json:"id"`
-	Email    string             `json:"email" binding:"required,email"`
-	Password string             `json:"password" binding:"required,min=8"`
+	ID       primitive.ObjectID `bson:"_id,omitempty"`
+	Email    string             `bson:"email" binding:"required,email"`
+	Password string             `bson:"password" binding:"required,min=8"`
 }
 
 type CreateUserInput struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Name      string             `json:"name" binding:"required,min=5,max=25"`
-	Username  string             `json:"username" binding:"required,min=5,max=25"`
-	Email     string             `json:"email" binding:"required,email"`
-	Password  string             `json:"password" binding:"required,min=8"`
-	Avatar    string             `bson:"avatar,omitempty" json:"avatar"`
-	Bio       string             `bson:"bio,omitempty" json:"bio"`
+	Name      string             `bson:"name" binding:"required,min=5,max=25"`
+	Username  string             `bson:"username" binding:"required,min=5,max=25"`
+	Email     string             `bson:"email" binding:"required,email"`
+	Password  string             `bson:"password" binding:"required,min=8"`
+	Avatar    string             `bson:"avatar,omitempty"`
+	Bio       string             `bson:"bio,omitempty"`
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 }
 
 type UpdateUserInput struct {
-	Name     *string `json:"name" binding:"omitempty,min=5,max=25"`
-	Username *string `json:"username" binding:"omitempty,min=5,max=25"`
-	Email    *string `json:"email" binding:"omitempty,email"`
-	Password *string `json:"password" binding:"omitempty,min=8"`
-	Avatar   *string `json:"avatar"`
-	Bio      *string `json:"bio"`
+	Name     *string `bson:"name" binding:"omitempty,min=5,max=25"`
+	Username *string `bson:"username" binding:"omitempty,min=5,max=25"`
+	Email    *string `bson:"email" binding:"omitempty,email"`
+	Password *string `bson:"password" binding:"omitempty,min=8"`
+	Avatar   *string `bson:"avatar"`
+	Bio      *string `bson:"bio"`
 }
 
 type UserResponse struct {
-	ID        string    `json:"id"`
+	ID        string    `bson:"_id,omitempty" json:"id,omitempty"`
 	Name      string    `json:"name"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`

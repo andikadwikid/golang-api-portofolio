@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
@@ -13,13 +11,14 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		panic("Error loading .env")
 	}
 
 	database.Connect()
 
 	r := gin.Default()
 	routes.UserRoutes(r)
+	routes.SocialMediaRoutes(r)
 
-	r.Run(":8080")
+	r.Run(":8081")
 }

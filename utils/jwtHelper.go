@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -60,4 +61,32 @@ func ValidateJWT(tokenString string) (*JWTClaims, error) {
 	}
 
 	return claims, nil
+}
+
+// ambil secret dari env
+var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
+
+// function untuk parse token
+func ParseJWT(tokenString string) (jwt.MapClaims, error) {
+	// remove "Bearer "
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// validasi method signing
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("invalid signing method")
+		}
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// ambil claims
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, errors.New("invalid token")
 }

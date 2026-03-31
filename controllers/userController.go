@@ -104,6 +104,7 @@ func LoginUser(c *gin.Context) {
 
 	var user models.UserLoginInput
 	err := collection.FindOne(ctx, bson.M{"email": input.Email}).Decode(&user)
+
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -44,18 +43,18 @@ func CreateSocialMedia(c *gin.Context) {
 		return
 	}
 
-	userCollection := database.DB.Collection("users")
+	// userCollection := database.DB.Collection("users")
 
-	var user models.User
+	// var user models.User
 	// Check user at database
-	err = userCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
-
-	if err == mongo.ErrNoDocuments {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "User not found",
-		})
-		return
-	}
+	// err = userCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
+	// fmt.Println(user)
+	// if err == mongo.ErrNoDocuments {
+	// 	c.JSON(http.StatusUnauthorized, gin.H{
+	// 		"error": "User not found",
+	// 	})
+	// 	return
+	// }
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -76,7 +75,6 @@ func CreateSocialMedia(c *gin.Context) {
 
 	result, err := collection.InsertOne(ctx, newSocialMedia)
 	if err != nil {
-
 		// Handle duplicate key (dari unique index)
 		if mongo.IsDuplicateKeyError(err) {
 			c.JSON(http.StatusBadRequest, gin.H{

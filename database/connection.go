@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -55,4 +56,29 @@ func Connect() {
 
 	// Set the selected database
 	DB = client.Database(databaseName)
+	InitIndexes()
+}
+
+func InitIndexes() {
+	SocialMediaIndexes()
+}
+
+func SocialMediaIndexes() {
+	ctx := context.Background()
+
+	indexes := []mongo.IndexModel{
+		{
+			Keys:    bson.M{"name": 1},
+			Options: options.Index().SetUnique(true),
+		},
+		// {
+		// 	Keys:    bson.M{"username": 1},
+		// 	Options: options.Index().SetUnique(true),
+		// },
+	}
+
+	_, err := DB.Collection("social_media").Indexes().CreateMany(ctx, indexes)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
