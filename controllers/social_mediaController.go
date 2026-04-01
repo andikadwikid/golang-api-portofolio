@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"portofolio-api/database"
-	"portofolio-api/helpers"
 	"portofolio-api/models"
 	"portofolio-api/utils"
 )
@@ -37,18 +37,17 @@ func CreateSocialMedia(c *gin.Context) {
 	collection := database.DB.Collection("social_media")
 
 	// Get user ID from context
-	userID, err := helpers.GetUserIDFromContext(c)
-	if err != nil {
-		c.JSON(401, gin.H{"error": err.Error()})
-		return
-	}
+	// userID, err := helpers.GetUserIDFromContext(c)
+	// if err != nil {
+	// 	c.JSON(401, gin.H{"error": err.Error()})
+	// 	return
+	// }
 
 	// userCollection := database.DB.Collection("users")
 
 	// var user models.User
-	// Check user at database
+	// // Check user at database
 	// err = userCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
-	// fmt.Println(user)
 	// if err == mongo.ErrNoDocuments {
 	// 	c.JSON(http.StatusUnauthorized, gin.H{
 	// 		"error": "User not found",
@@ -56,17 +55,16 @@ func CreateSocialMedia(c *gin.Context) {
 	// 	return
 	// }
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{
+	// 		"error": err.Error(),
+	// 	})
+	// 	return
+	// }
 
 	// Mapping ke model
 	newSocialMedia := models.SocialMedia{
 		ID:        primitive.NewObjectID(),
-		UserID:    userID,
 		Icon:      input.Icon,
 		Name:      input.Name,
 		CreatedAt: time.Now(),
@@ -95,7 +93,7 @@ func CreateSocialMedia(c *gin.Context) {
 	}
 
 	response := models.SocialMediaResponse{
-		ID:        insertedID.Hex(),
+		ID:        insertedID,
 		Name:      newSocialMedia.Name,
 		Icon:      newSocialMedia.Icon,
 		CreatedAt: newSocialMedia.CreatedAt,
@@ -105,5 +103,29 @@ func CreateSocialMedia(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Social media created",
 		"data":    response,
+	})
+}
+
+func GetSocialMedia(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	collectionSocialMedia := database.DB.Collection("social_media")
+	cursor, err := collectionSocialMedia.Find(ctx, bson.M{})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer cursor.Close(ctx)
+
+	var socialMedias []models.SocialMediaResponse
+	if err := cursor.All(ctx, &socialMedias); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "error parsing social medias"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Social medias fetched",
+		"data":    socialMedias,
 	})
 }
