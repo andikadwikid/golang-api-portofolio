@@ -69,6 +69,7 @@ func CreateSocialMedia(c *gin.Context) {
 		Name:      input.Name,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+		IsDeleted: false,
 	}
 
 	result, err := collection.InsertOne(ctx, newSocialMedia)
@@ -111,7 +112,7 @@ func GetSocialMedia(c *gin.Context) {
 	defer cancel()
 
 	collectionSocialMedia := database.DB.Collection("social_media")
-	cursor, err := collectionSocialMedia.Find(ctx, bson.M{})
+	cursor, err := collectionSocialMedia.Find(ctx, bson.M{"is_deleted": false})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -128,4 +129,94 @@ func GetSocialMedia(c *gin.Context) {
 		"message": "Social medias fetched",
 		"data":    socialMedias,
 	})
+}
+
+func UpdateSocialMedia(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	collection := database.DB.Collection("social_media")
+
+	idParam := c.Param("id")
+	id, err := primitive.ObjectIDFromHex(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	var input models.SocialMediaUpdateInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		validationErrors := utils.FormatValidationError(err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errors": validationErrors,
+		})
+		return
+	}
+
+	// Normalize
+	input.Name = strings.ToLower(strings.TrimSpace(input.Name))
+
+	update := bson.M{
+		"$set": bson.M{
+			"icon":       input.Icon,
+			"name":       input.Name,
+			"updated_at": time.Now(),
+		},
+	}
+
+	result, err := collection.UpdateOne(ctx, bson.M{"_id": id, "is_deleted": false}, update)
+	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Social media already exists",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if result.MatchedCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Social media not found or already deleted"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Social media updated",
+		"data":    input,
+	})
+}
+
+func DeleteSocialMedia(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	collection := database.DB.Collection("social_media")
+
+	idParam := c.Param("id")
+	id, err := primitive.ObjectIDFromHex(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"is_deleted": true,
+			"deleted_at": time.Now(),
+		},
+	}
+
+	result, err := collection.UpdateOne(ctx, bson.M{"_id": id, "is_deleted": false}, update)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if result.MatchedCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Social media not found or already deleted"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Social media deleted successfully"})
 }

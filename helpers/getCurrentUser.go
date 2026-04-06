@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"context"
-	"errors"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -27,13 +26,4 @@ func GetCurrentUser(c *gin.Context, ctx context.Context) (*models.User, error) {
 	}
 
 	return &user, nil
-}
-
-func GetUserID(c *gin.Context) (string, error) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		return "", errors.New("user_id not found in context")
-	}
-
-	return userID.(string), nil
 }

@@ -16,13 +16,17 @@ func FormatValidationError(err error) map[string]string {
 
 		switch e.Tag() {
 		case "required":
-			errors[field] = field + " wajib diisi"
+			errors[field] = field + " is required"
 		case "email":
-			errors[field] = "Format email tidak valid"
+			errors[field] = "Invalid email format"
 		case "min":
-			errors[field] = field + " minimal " + e.Param() + " karakter"
+			errors[field] = field + " must be at least " + e.Param() + " characters"
+		case "max":
+			errors[field] = field + " must be at most " + e.Param() + " characters"
+		case "unique":
+			errors[field] = field + " is already used"
 		default:
-			errors[field] = field + " tidak valid"
+			errors[field] = field + " is invalid"
 		}
 	}
 
