@@ -19,18 +19,18 @@ services:
       retries: 5
 
   app:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-andikadwikid}/golang-api-portofolio:latest
     env_file:
       - .env
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     container_name: golang-app
     restart: unless-stopped
     depends_on:
       mongodb:
         condition: service_healthy
     environment:
-      # Menggunakan variabel dari .env jika tersedia, atau nilai default di bawah
       MONGO_URI: ${MONGO_URI:-mongodb://admin:secret123@mongodb:27017/?authSource=admin}
       MONGO_DB: ${MONGO_DB:-mydb}
       APP_PORT: ${APP_PORT:-8081}

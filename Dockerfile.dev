@@ -1,0 +1,26 @@
+FROM golang:1.26-alpine
+
+WORKDIR /app
+
+# Agar mempermudah instalasi package dan Air membutuhkan git
+RUN apk add --no-cache git
+
+# Install Air untuk live-reload & instal Swag untuk swagger
+RUN go install github.com/air-verse/air@latest
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+
+# Copy go.mod dan sum untuk caching dependencies
+COPY go.mod go.sum ./
+RUN go mod tidy
+
+# (Source code akan di-mount dari host / laptop, jadi tidak perlu COPY source code sebenarnya)
+# Tapi untuk initial build tetap copy terlebih dahulu.
+COPY . .
+
+# Generate initial swagger
+RUN swag init
+
+EXPOSE 8081
+
+# Jalankan Air secara default
+CMD ["air", "-c", ".air.toml"]

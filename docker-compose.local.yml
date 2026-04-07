@@ -1,0 +1,43 @@
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret123
+    ports:
+      - "27017:27017" # Mapping port DB ke host jika butuh akses DB secara langsung
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app # Me-mount folder laptop ke dalam docker, jika diedit akan langsung tereksekusi
+    container_name: golang-app
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-8081}:${APP_PORT:-8081}" # Membuka akses port API ke localhost
+    environment:
+      # Kita hardcode MONGO_URI agar dipastikan menggunakan mongodb lokal,
+      # menimpa URI Atlas yang ada di dalam .env
+      MONGO_URI: mongodb://admin:secret123@mongodb:27017/?authSource=admin
+      MONGO_DB: ${MONGO_DB:-portofolio}
+      APP_PORT: ${APP_PORT:-8081}
+
+volumes:
+  mongo_data:
