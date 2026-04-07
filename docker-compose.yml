@@ -6,8 +6,8 @@ services:
     container_name: mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: secret123
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD:-secret123}
     volumes:
       - mongo_data:/data/db
     networks:
@@ -19,20 +19,20 @@ services:
       retries: 5
 
   app:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-andikadwikid}/golang-api-portofolio:latest
     env_file:
       - .env
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     container_name: golang-app
     restart: unless-stopped
     depends_on:
       mongodb:
         condition: service_healthy
     environment:
-      # Menggunakan variabel dari .env jika tersedia, atau nilai default di bawah
-      MONGO_URI: ${MONGO_URI:-mongodb://admin:secret123@mongodb:27017/?authSource=admin}
-      MONGO_DB: ${MONGO_DB:-mydb}
+      MONGO_URI: ${MONGO_URI:-mongodb://${DB_USER:-admin}:${DB_PASSWORD:-secret123}@mongodb:27017/?authSource=admin}
+      MONGO_DB: ${MONGO_DB:-portofolio}
       APP_PORT: ${APP_PORT:-8081}
     expose:
       - "8081"
