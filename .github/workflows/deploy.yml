@@ -59,8 +59,9 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.PORT || 22 }}
+          timeout: 60s
           script: |
             cd /var/www/golang-api-portofolio 
-            docker-compose pull
-            docker-compose up -d
+            docker compose pull
+            docker compose up -d
             docker image prune -f
