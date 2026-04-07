@@ -1,0 +1,443 @@
+basePath: /
+definitions:
+  models.CreateUserInput:
+    properties:
+      avatar:
+        type: string
+      bio:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        maxLength: 25
+        minLength: 5
+        type: string
+      password:
+        minLength: 8
+        type: string
+      username:
+        maxLength: 25
+        minLength: 5
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - username
+    type: object
+  models.SocialMediaCreateInput:
+    properties:
+      createdAt:
+        type: string
+      icon:
+        type: string
+      name:
+        minLength: 3
+        type: string
+    required:
+    - icon
+    - name
+    type: object
+  models.SocialMediaUpdateInput:
+    properties:
+      icon:
+        type: string
+      name:
+        minLength: 3
+        type: string
+      updatedAt:
+        type: string
+    required:
+    - icon
+    - name
+    type: object
+  models.UpdateUserInput:
+    properties:
+      avatar:
+        type: string
+      bio:
+        type: string
+      email:
+        type: string
+      name:
+        maxLength: 25
+        minLength: 5
+        type: string
+      password:
+        minLength: 8
+        type: string
+      username:
+        maxLength: 25
+        minLength: 5
+        type: string
+    type: object
+  models.UserLoginInput:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.UserResponse:
+    properties:
+      avatar:
+        type: string
+      bio:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a portfolio API server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Portfolio API
+  version: "1.0"
+paths:
+  /social-media:
+    get:
+      description: Retrieve a list of all active social media entries
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all social media entries
+      tags:
+      - social_media
+    post:
+      consumes:
+      - application/json
+      description: Create a new social media entry with name and icon
+      parameters:
+      - description: Social media details
+        in: body
+        name: social_media
+        required: true
+        schema:
+          $ref: '#/definitions/models.SocialMediaCreateInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new social media entry
+      tags:
+      - social_media
+  /social-media/{id}:
+    delete:
+      description: Soft delete a social media entry by ID
+      parameters:
+      - description: Social Media ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a social media entry
+      tags:
+      - social_media
+    put:
+      consumes:
+      - application/json
+      description: Update social media details by ID
+      parameters:
+      - description: Social Media ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated social media details
+        in: body
+        name: social_media
+        required: true
+        schema:
+          $ref: '#/definitions/models.SocialMediaUpdateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a social media entry
+      tags:
+      - social_media
+  /users:
+    get:
+      description: Retrieve a list of all registered users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.UserResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all users
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      description: Delete a user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update user details by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated user details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateUserInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user details
+      tags:
+      - users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with email and password to get JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserLoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Login user
+      tags:
+      - users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with the provided details
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateUserInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register a new user
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -16,6 +16,19 @@ import (
 	"portofolio-api/utils"
 )
 
+// CreateSocialMedia godoc
+// @Summary Create a new social media entry
+// @Description Create a new social media entry with name and icon
+// @Tags social_media
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param social_media body models.SocialMediaCreateInput true "Social media details"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /social-media [post]
 func CreateSocialMedia(c *gin.Context) {
 	var input models.SocialMediaCreateInput
 
@@ -107,6 +120,14 @@ func CreateSocialMedia(c *gin.Context) {
 	})
 }
 
+// GetSocialMedia godoc
+// @Summary Get all social media entries
+// @Description Retrieve a list of all active social media entries
+// @Tags social_media
+// @Produce  json
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /social-media [get]
 func GetSocialMedia(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -131,6 +152,20 @@ func GetSocialMedia(c *gin.Context) {
 	})
 }
 
+// UpdateSocialMedia godoc
+// @Summary Update a social media entry
+// @Description Update social media details by ID
+// @Tags social_media
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param id path string true "Social Media ID"
+// @Param social_media body models.SocialMediaUpdateInput true "Updated social media details"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /social-media/{id} [put]
 func UpdateSocialMedia(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -187,6 +222,18 @@ func UpdateSocialMedia(c *gin.Context) {
 	})
 }
 
+// DeleteSocialMedia godoc
+// @Summary Delete a social media entry
+// @Description Soft delete a social media entry by ID
+// @Tags social_media
+// @Produce  json
+// @Security BearerAuth
+// @Param id path string true "Social Media ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /social-media/{id} [delete]
 func DeleteSocialMedia(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

@@ -16,6 +16,17 @@ import (
 	"portofolio-api/utils"
 )
 
+// RegisterUser godoc
+// @Summary Register a new user
+// @Description Register a new user with the provided details
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param user body models.CreateUserInput true "User registration details"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /users/register [post]
 func RegisterUser(c *gin.Context) {
 	var input models.CreateUserInput
 
@@ -85,6 +96,19 @@ func RegisterUser(c *gin.Context) {
 	})
 }
 
+// LoginUser godoc
+// @Summary Login user
+// @Description Login with email and password to get JWT token
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param login body models.UserLoginInput true "Login credentials"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /users/login [post]
 func LoginUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -130,6 +154,14 @@ func LoginUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
+// GetUsers godoc
+// @Summary Get all users
+// @Description Retrieve a list of all registered users
+// @Tags users
+// @Produce  json
+// @Success 200 {array} models.UserResponse
+// @Failure 500 {object} map[string]interface{}
+// @Router /users [get]
 func GetUsers(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -163,6 +195,20 @@ func GetUsers(c *gin.Context) {
 
 }
 
+// UpdateUser godoc
+// @Summary Update user details
+// @Description Update user details by ID
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param id path string true "User ID"
+// @Param user body models.UpdateUserInput true "Updated user details"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /users/{id} [put]
 func UpdateUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -222,6 +268,18 @@ func UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User updated"})
 }
 
+// DeleteUser godoc
+// @Summary Delete a user
+// @Description Delete a user by ID
+// @Tags users
+// @Produce  json
+// @Security BearerAuth
+// @Param id path string true "User ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /users/{id} [delete]
 func DeleteUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
