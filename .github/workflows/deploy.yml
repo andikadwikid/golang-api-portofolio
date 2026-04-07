@@ -61,6 +61,7 @@ jobs:
           timeout: 60s
           script: |
             cd /var/www/golang-api-portofolio
+            git pull
             docker compose down
             docker compose pull
             docker compose up -d --force-recreate
