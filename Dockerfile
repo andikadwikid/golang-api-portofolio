@@ -8,6 +8,9 @@ RUN go mod tidy
 
 COPY . .
 
+# Generate Swagger documentation
+RUN go run github.com/swaggo/swag/cmd/swag init
+
 # Optional: static binary biar ringan & aman
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app
 
