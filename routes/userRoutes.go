@@ -13,7 +13,7 @@ func UserRoutes(r *gin.Engine) {
 	users := r.Group("/users")
 	{
 		users.GET("/test", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})
+			c.JSON(http.StatusOK, gin.H{"message": "Hello, Worldd!"})
 		})
 		users.GET("/health", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "OK"})
