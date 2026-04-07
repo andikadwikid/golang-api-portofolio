@@ -9,10 +9,9 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		panic("Error loading .env")
-	}
+	// Memuat .env jika ada (biasanya untuk pengembangan lokal)
+	// Di server/Docker, variabel lingkungan biasanya sudah diatur via docker-compose atau env_file
+	godotenv.Load()
 
 	database.Connect()
 
