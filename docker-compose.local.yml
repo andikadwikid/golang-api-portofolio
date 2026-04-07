@@ -32,6 +32,7 @@ services:
         condition: service_healthy
     ports:
       - "${APP_PORT:-8081}:${APP_PORT:-8081}" # Membuka akses port API ke localhost
+    environment:
       MONGO_URI: ${MONGO_URI:-mongodb://${DB_USER:-admin}:${DB_PASSWORD:-secret123}@mongodb:27017/?authSource=admin}
       MONGO_DB: ${MONGO_DB:-portofolio}
       APP_PORT: ${APP_PORT:-8081}
