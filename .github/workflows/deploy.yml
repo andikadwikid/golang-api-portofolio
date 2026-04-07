@@ -60,7 +60,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.PORT || 22 }}
           script: |
-            cd ~/golang-api-portofolio # Sesuaikan dengan path repo di server
+            cd /var/www/golang-api-portofolio 
             docker-compose pull
             docker-compose up -d
             docker image prune -f
