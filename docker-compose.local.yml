@@ -5,8 +5,8 @@ services:
     container_name: mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD:-secret123}
     ports:
       - "27017:27017" # Mapping port DB ke host jika butuh akses DB secara langsung
     volumes:
@@ -32,11 +32,8 @@ services:
         condition: service_healthy
     ports:
       - "${APP_PORT:-8081}:${APP_PORT:-8081}" # Membuka akses port API ke localhost
-    environment:
-      # Kita hardcode MONGO_URI agar dipastikan menggunakan mongodb lokal,
-      # menimpa URI Atlas yang ada di dalam .env
-      MONGO_URI: ${MONGO_URI}
-      MONGO_DB: ${MONGO_DB}
+      MONGO_URI: ${MONGO_URI:-mongodb://${DB_USER:-admin}:${DB_PASSWORD:-secret123}@mongodb:27017/?authSource=admin}
+      MONGO_DB: ${MONGO_DB:-portofolio}
       APP_PORT: ${APP_PORT:-8081}
 
 volumes:
