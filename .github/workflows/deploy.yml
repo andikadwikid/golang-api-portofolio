@@ -60,8 +60,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.PORT || 22 }}
           timeout: 60s
-          debug: true
-          request_pty: true
           script: |
             cd /var/www/golang-api-portofolio 
-            docker compose up -d --build
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
