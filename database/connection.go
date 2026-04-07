@@ -16,21 +16,18 @@ import (
 var DB *mongo.Database
 
 func Connect() {
-	// Load environment variables
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("❌ Error loading .env file")
-	}
+	// Memuat .env jika ada (biasanya untuk pengembangan lokal)
+	godotenv.Load()
 
-	// Get URI and database name from .env file
+	// Get URI and database name from environment variables
 	mongoURI := os.Getenv("MONGO_URI")
 	databaseName := os.Getenv("MONGO_DB")
 
 	if mongoURI == "" {
-		log.Fatal("❌ MONGO_URI is not set in .env")
+		log.Fatal("❌ MONGO_URI is not set in environment")
 	}
 	if databaseName == "" {
-		log.Fatal("❌ DB_NAME is not set in .env")
+		log.Fatal("❌ MONGO_DB is not set in environment")
 	}
 
 	// Set up connection options

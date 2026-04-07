@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
@@ -19,5 +21,10 @@ func main() {
 	routes.UserRoutes(r)
 	routes.SocialMediaRoutes(r)
 
-	r.Run(":8081")
+	port := os.Getenv("APP_PORT")
+	if port == "" {
+		port = "8081"
+	}
+
+	r.Run(":" + port)
 }
