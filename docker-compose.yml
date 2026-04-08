@@ -10,8 +10,11 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD:-secret123}
     volumes:
       - mongo_data:/data/db
+    ports:
+      - "27017:27017"
     networks:
       - web
+    command: ["mongod", "--bind_ip", "0.0.0.0"]
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
