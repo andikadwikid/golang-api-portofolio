@@ -152,6 +152,53 @@ func GetSocialMedia(c *gin.Context) {
 	})
 }
 
+func GetSocialMediaById(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// 1. Validate ID
+	idParam := c.Param("id")
+	id, err := primitive.ObjectIDFromHex(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid ID format",
+		})
+		return
+	}
+
+	// 2. Prepare collection
+	collection := database.DB.Collection("social_media")
+
+	// 3. Query
+	filter := bson.M{
+		"_id":        id,
+		"is_deleted": false,
+	}
+
+	var socialMedia models.SocialMediaResponse
+
+	err = collection.FindOne(ctx, filter).Decode(&socialMedia)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Social media not found",
+			})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch data",
+		})
+		return
+	}
+
+	// 4. Success response
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Social media fetched successfully",
+		"data":    socialMedia,
+	})
+}
+
 // UpdateSocialMedia godoc
 // @Summary Update a social media entry
 // @Description Update social media details by ID
