@@ -44,6 +44,7 @@ func main() {
 
 	routes.UserRoutes(r)
 	routes.SocialMediaRoutes(r)
+	routes.SocialMediaUserRoutes(r)
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {
