@@ -14,8 +14,8 @@ type Project struct {
 	PortofolioID primitive.ObjectID `json:"portofolio_id,omitempty" bson:"portofolio_id,omitempty"`
 	CreatedAt    time.Time          `json:"created_at,omitempty" bson:"created_at,omitempty"`
 	UpdatedAt    time.Time          `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
-	IsActive     bool               `json:"is_active,omitempty" bson:"is_active,omitempty"`
-	IsDeleted    bool               `json:"is_deleted,omitempty" bson:"is_deleted,omitempty"`
+	IsActive     bool               `json:"is_active" bson:"is_active"`
+	IsDeleted    bool               `json:"is_deleted" bson:"is_deleted"`
 	DeletedAt    time.Time          `json:"deleted_at,omitempty" bson:"deleted_at,omitempty"`
 }
 

@@ -28,6 +28,10 @@ go.work
 go.work.sum
 backend/tmp/
 backend/public/
+public/uploads/
+!public/uploads/.gitkeep
+public/uploads/project_images/*
+!public/uploads/project_images/.gitkeep
 .air.toml
 *.tmp/
 tmp/

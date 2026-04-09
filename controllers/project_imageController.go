@@ -140,6 +140,7 @@ func CreateProjectImage(c *gin.Context) {
 			Image:     "public/uploads/project_images/" + filename,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
+			IsActive:  true,
 			IsDeleted: false,
 		}
 		newImages = append(newImages, imageDoc)
