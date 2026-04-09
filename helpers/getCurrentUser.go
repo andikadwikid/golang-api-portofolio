@@ -12,7 +12,6 @@ import (
 	"portofolio-api/models"
 )
 
-
 func GetCurrentUser(c *gin.Context, ctx context.Context) (*models.User, int, error) {
 	userID, err := GetUserIDFromContext(c)
 	if err != nil {
@@ -21,7 +20,7 @@ func GetCurrentUser(c *gin.Context, ctx context.Context) (*models.User, int, err
 
 	var user models.User
 	err = database.DB.Collection("users").
-		FindOne(ctx, bson.M{"_id": userID, "is_active": true}).
+		FindOne(ctx, bson.M{"_id": userID}).
 		Decode(&user)
 
 	if err != nil {

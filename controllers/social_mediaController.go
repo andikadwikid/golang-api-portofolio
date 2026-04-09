@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -165,6 +166,8 @@ func GetSocialMediaById(c *gin.Context) {
 		})
 		return
 	}
+
+	fmt.Println("ID:", id)
 
 	// 2. Prepare collection
 	collection := database.DB.Collection("social_media")

@@ -45,7 +45,14 @@ func CreateSocialMediaUser(c *gin.Context) {
 	}
 
 	collectionSocialMedia := database.DB.Collection("social_media")
-	err = collectionSocialMedia.FindOne(ctx, bson.M{"_id": input.SocialMediaID, "is_deleted": false}).Err()
+
+	socialMediaID, err := primitive.ObjectIDFromHex(input.SocialMediaID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Social Media ID format"})
+		return
+	}
+
+	err = collectionSocialMedia.FindOne(ctx, bson.M{"_id": socialMediaID, "is_deleted": false}).Err()
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Social media not found"})
@@ -58,7 +65,7 @@ func CreateSocialMediaUser(c *gin.Context) {
 	newSocialMediaUser := models.SocialMediaUser{
 		ID:            primitive.NewObjectID(),
 		Link:          input.Link,
-		SocialMediaID: input.SocialMediaID,
+		SocialMediaID: socialMediaID,
 		UserID:        userID,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
@@ -237,10 +244,16 @@ func UpdateSocialMediaUser(c *gin.Context) {
 	collection := database.DB.Collection("social_media_user")
 
 	// 5. Siapkan data yang akan diperbarui
+	socialMediaID, err := primitive.ObjectIDFromHex(input.SocialMediaID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Social Media ID format"})
+		return
+	}
+
 	update := bson.M{
 		"$set": bson.M{
 			"link":            input.Link,
-			"social_media_id": input.SocialMediaID,
+			"social_media_id": socialMediaID,
 			"updated_at":      time.Now(),
 		},
 	}

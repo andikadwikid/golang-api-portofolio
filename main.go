@@ -45,6 +45,11 @@ func main() {
 	routes.UserRoutes(r)
 	routes.SocialMediaRoutes(r)
 	routes.SocialMediaUserRoutes(r)
+	routes.PortofolioRoutes(r)
+	routes.ProjectRoutes(r)
+
+	// Serve static files
+	r.Static("/public", "./public")
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {

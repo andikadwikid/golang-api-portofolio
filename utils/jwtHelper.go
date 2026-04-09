@@ -15,23 +15,21 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-func getSecret() []byte {
-	return []byte(os.Getenv("JWT_SECRET"))
-}
-
 func GenerateJWT(userID primitive.ObjectID) (string, error) {
+	var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 	claims := jwt.MapClaims{
 		"user_id": userID.Hex(),
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(getSecret())
+	return token.SignedString(jwtSecret)
 }
 
 func VerifyJWT(tokenString string) (*jwt.Token, error) {
+	var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return getSecret(), nil
+		return jwtSecret, nil
 	})
 }
 
@@ -63,11 +61,9 @@ func ValidateJWT(tokenString string) (*JWTClaims, error) {
 	return claims, nil
 }
 
-// ambil secret dari env
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
-
 // function untuk parse token
 func ParseJWT(tokenString string) (jwt.MapClaims, error) {
+	var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 	// remove "Bearer "
 	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 
