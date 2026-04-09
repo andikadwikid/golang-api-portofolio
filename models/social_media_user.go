@@ -19,15 +19,15 @@ type SocialMediaUser struct {
 type SocialMediaUserInput struct {
 	Link          string             `json:"link" binding:"required"`
 	SocialMediaID primitive.ObjectID `json:"social_media_id" binding:"required"`
-	UserID        primitive.ObjectID `json:"user_id" binding:"required"`
-	IsActive      bool               `json:"is_active"`
+}
+
+type SocialMediaUserStatusUpdateInput struct {
+	IsActive bool `json:"is_active"`
 }
 
 type SocialMediaUserUpdateInput struct {
 	Link          string             `json:"link" binding:"required"`
 	SocialMediaID primitive.ObjectID `json:"social_media_id" binding:"required"`
-	UserID        primitive.ObjectID `json:"user_id" binding:"required"`
-	IsActive      bool               `json:"is_active"`
 }
 
 type SocialMediaUserResponse struct {

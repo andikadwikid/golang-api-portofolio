@@ -20,19 +20,38 @@ func CreateSocialMediaUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	collectionSocialMediaUser := database.DB.Collection("social_media_user")
+	user, statusCode, err := helpers.GetCurrentUser(c, ctx)
+	if err != nil {
+		if statusCode == http.StatusUnauthorized {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Unauthorized / User not found",
+			})
+			return
+		}
 
-	collectionSocialMedia := database.DB.Collection("social_media")
+		log.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch user",
+		})
+		return
+	}
 
-	var input models.SocialMediaUser
+	userID := user.ID
+
+	var input models.SocialMediaUserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	socialMedia := collectionSocialMedia.FindOne(ctx, bson.M{"_id": input.SocialMediaID})
-	if socialMedia == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Social media not found"})
+	collectionSocialMedia := database.DB.Collection("social_media")
+	err = collectionSocialMedia.FindOne(ctx, bson.M{"_id": input.SocialMediaID, "is_deleted": false}).Err()
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Social media not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error checking social media"})
 		return
 	}
 
@@ -40,12 +59,13 @@ func CreateSocialMediaUser(c *gin.Context) {
 		ID:            primitive.NewObjectID(),
 		Link:          input.Link,
 		SocialMediaID: input.SocialMediaID,
-		UserID:        input.UserID,
+		UserID:        userID,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 		IsActive:      true,
 	}
 
+	collectionSocialMediaUser := database.DB.Collection("social_media_user")
 	result, err := collectionSocialMediaUser.InsertOne(ctx, newSocialMediaUser)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -63,25 +83,12 @@ func GetMySocialMedia(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// 1. Get user ID from context
-	userID, err := helpers.GetUserIDFromContext(c)
+	// 1. Get user from context and validate existence
+	user, statusCode, err := helpers.GetCurrentUser(c, ctx)
 	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized",
-		})
-		return
-	}
-
-	// 2. Validate user existence
-	userCollection := database.DB.Collection("users")
-
-	var user models.User
-	err = userCollection.FindOne(ctx, bson.M{"_id": userID, "is_active": true}).Decode(&user)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		if statusCode == http.StatusUnauthorized {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "User not found",
+				"error": "Unauthorized / User not found",
 			})
 			return
 		}
@@ -93,7 +100,9 @@ func GetMySocialMedia(c *gin.Context) {
 		return
 	}
 
-	// 3. Query social media user
+	userID := user.ID
+
+	// 2. Query social media user
 	collection := database.DB.Collection("social_media_user")
 
 	filter := bson.M{
@@ -120,7 +129,7 @@ func GetMySocialMedia(c *gin.Context) {
 		return
 	}
 
-	// 4. Success response
+	// 3. Success response
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Social media users fetched successfully",
 		"data":    socialMediaUsers,
@@ -132,7 +141,7 @@ func GetSocialMediaByUserID(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	userID := c.Param("id")
+	userID := c.Param("user_id")
 	id, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -175,6 +184,200 @@ func GetSocialMediaByUserID(c *gin.Context) {
 	})
 }
 
-func UpdateSocialMediaUser(c *gin.Context) {}
+func UpdateSocialMediaUser(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-func DeleteSocialMediaUser(c *gin.Context) {}
+	user, statusCode, err := helpers.GetCurrentUser(c, ctx)
+	if err != nil {
+		if statusCode == http.StatusUnauthorized {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Unauthorized / User not found",
+			})
+			return
+		}
+
+		log.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch user",
+		})
+		return
+	}
+
+	// 1. Dapatkan user ID dari konteks autentikasi
+	userID := user.ID
+
+	// 2. Ambil ID social media user dari parameter URL
+	idParam := c.Param("socialmedia_id")
+	socialMediaUserID, err := primitive.ObjectIDFromHex(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	// 3. Bind dan validasi input JSON
+	var input models.SocialMediaUserUpdateInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 4. Pastikan social media yang direferensikan ada di database
+	collectionSocialMedia := database.DB.Collection("social_media")
+	err = collectionSocialMedia.FindOne(ctx, bson.M{"_id": input.SocialMediaID, "is_deleted": false}).Err()
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Social media not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error checking social media"})
+		return
+	}
+
+	collection := database.DB.Collection("social_media_user")
+
+	// 5. Siapkan data yang akan diperbarui
+	update := bson.M{
+		"$set": bson.M{
+			"link":            input.Link,
+			"social_media_id": input.SocialMediaID,
+			"updated_at":      time.Now(),
+		},
+	}
+
+	// 6. Jalankan update dengan filter ID dan UserID (ownership check)
+	result, err := collection.UpdateOne(ctx, bson.M{"_id": socialMediaUserID, "user_id": userID}, update)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update social media user"})
+		return
+	}
+
+	// 7. Periksa apakah ada dokumen yang cocok dan berhasil diupdate
+	if result.MatchedCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Social media user not found or not authorized"})
+		return
+	}
+
+	// 8. Berikan respon sukses
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Social media user updated successfully",
+	})
+}
+
+func UpdateSocialMediaUserStatus(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	user, statusCode, err := helpers.GetCurrentUser(c, ctx)
+	if err != nil {
+		if statusCode == http.StatusUnauthorized {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Unauthorized / User not found",
+			})
+			return
+		}
+
+		log.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch user",
+		})
+		return
+	}
+
+	userID := user.ID
+
+	idParam := c.Param("socialmedia_id")
+	socialMediaUserID, err := primitive.ObjectIDFromHex(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	var input models.SocialMediaUserStatusUpdateInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	collection := database.DB.Collection("social_media_user")
+
+	update := bson.M{
+		"$set": bson.M{
+			"is_active":  input.IsActive,
+			"updated_at": time.Now(),
+		},
+	}
+
+	result, err := collection.UpdateOne(ctx, bson.M{"_id": socialMediaUserID, "user_id": userID}, update)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update social media user status"})
+		return
+	}
+
+	if result.MatchedCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Social media user not found or not authorized"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Social media user status updated successfully",
+	})
+}
+
+func DeleteSocialMediaUser(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// 1. Dapatkan user dari context autentikasi
+	user, statusCode, err := helpers.GetCurrentUser(c, ctx)
+	if err != nil {
+		if statusCode == http.StatusUnauthorized {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Unauthorized / User not found",
+			})
+			return
+		}
+
+		log.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch user",
+		})
+		return
+	}
+
+	userID := user.ID
+
+	// 2. Ambil ID social media user dari parameter URL (:socialmedia_id)
+	idParam := c.Param("socialmedia_id")
+	socialMediaUserID, err := primitive.ObjectIDFromHex(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	// 3. Eksekusi penghapusan dengan filter ID dan UserID (ownership check)
+	collection := database.DB.Collection("social_media_user")
+
+	result, err := collection.DeleteOne(ctx, bson.M{
+		"_id":     socialMediaUserID,
+		"user_id": userID,
+	})
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete social media user"})
+		return
+	}
+
+	// 4. Periksa apakah ada dokumen yang terhapus
+	if result.DeletedCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Social media user not found or not authorized"})
+		return
+	}
+
+	// 5. Berikan respon sukses
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Social media user deleted successfully",
+	})
+}

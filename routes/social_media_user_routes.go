@@ -10,10 +10,11 @@ import (
 func SocialMediaUserRoutes(r *gin.Engine) {
 	socialMediaUser := r.Group("/social-media-user")
 	{
-		socialMediaUser.GET("/me", middlewares.AuthMiddleware(), controllers.GetMySocialMedia)
-		socialMediaUser.GET("/user/:id", middlewares.AuthMiddleware(), controllers.GetSocialMediaByUserID)
 		socialMediaUser.POST("/", middlewares.AuthMiddleware(), controllers.CreateSocialMediaUser)
-		socialMediaUser.PUT("/:id", middlewares.AuthMiddleware(), controllers.UpdateSocialMediaUser)
-		socialMediaUser.DELETE("/:id", middlewares.AuthMiddleware(), controllers.DeleteSocialMediaUser)
+		socialMediaUser.GET("/me", middlewares.AuthMiddleware(), controllers.GetMySocialMedia)
+		socialMediaUser.GET("/user/:user_id", middlewares.AuthMiddleware(), controllers.GetSocialMediaByUserID)
+		socialMediaUser.PUT("/:socialmedia_id", middlewares.AuthMiddleware(), controllers.UpdateSocialMediaUser)
+		socialMediaUser.PATCH("/:socialmedia_id/status", middlewares.AuthMiddleware(), controllers.UpdateSocialMediaUserStatus)
+		socialMediaUser.DELETE("/:socialmedia_id", middlewares.AuthMiddleware(), controllers.DeleteSocialMediaUser)
 	}
 }
