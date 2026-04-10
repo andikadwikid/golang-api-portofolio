@@ -249,7 +249,7 @@ func UpdatePortofolio(c *gin.Context) {
 	userID := user.ID
 
 	// 2. Get portfolio ID from param
-	portofolioIDParam := c.Param("portofolio_id")
+	portofolioIDParam := c.Param("id")
 	portofolioID, err := primitive.ObjectIDFromHex(portofolioIDParam)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{

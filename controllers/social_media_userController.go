@@ -16,6 +16,19 @@ import (
 	"portofolio-api/models"
 )
 
+// CreateSocialMediaUser godoc
+// @Summary Create a new social media user link
+// @Description Link an authenticated user to a specific social media platform with a link
+// @Tags social_media_user
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param social_media_user body models.SocialMediaUserInput true "Social media user link details"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /social-media-user [post]
 func CreateSocialMediaUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -85,7 +98,16 @@ func CreateSocialMediaUser(c *gin.Context) {
 	})
 }
 
-// Get Social Media by Auth
+// GetMySocialMedia godoc
+// @Summary Get authenticated user's social media links
+// @Description Retrieve all social media links associated with the currently authenticated user
+// @Tags social_media_user
+// @Produce  json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /social-media-user/me [get]
 func GetMySocialMedia(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -143,7 +165,16 @@ func GetMySocialMedia(c *gin.Context) {
 	})
 }
 
-// Get Social Media by User ID
+// GetSocialMediaByUserID godoc
+// @Summary Get social media links by User ID
+// @Description Retrieve all active social media links associated with a specific user ID
+// @Tags social_media_user
+// @Produce  json
+// @Param user_id path string true "User ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /social-media-user/user/{user_id} [get]
 func GetSocialMediaByUserID(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -191,6 +222,21 @@ func GetSocialMediaByUserID(c *gin.Context) {
 	})
 }
 
+// UpdateSocialMediaUser godoc
+// @Summary Update a social media user link
+// @Description Update the link or platform for an existing social media user link by ID
+// @Tags social_media_user
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param socialmedia_id path string true "Social Media User ID"
+// @Param social_media_user body models.SocialMediaUserUpdateInput true "Updated link details"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /social-media-user/{socialmedia_id} [put]
 func UpdateSocialMediaUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -229,9 +275,17 @@ func UpdateSocialMediaUser(c *gin.Context) {
 		return
 	}
 
-	// 4. Pastikan social media yang direferensikan ada di database
+	collection := database.DB.Collection("social_media_user")
+
+	// 4. Validasi dan pastikan social media yang direferensikan ada di database
+	socialMediaID, err := primitive.ObjectIDFromHex(input.SocialMediaID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Social Media ID format"})
+		return
+	}
+
 	collectionSocialMedia := database.DB.Collection("social_media")
-	err = collectionSocialMedia.FindOne(ctx, bson.M{"_id": input.SocialMediaID, "is_deleted": false}).Err()
+	err = collectionSocialMedia.FindOne(ctx, bson.M{"_id": socialMediaID, "is_deleted": false}).Err()
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Social media not found"})
@@ -241,15 +295,7 @@ func UpdateSocialMediaUser(c *gin.Context) {
 		return
 	}
 
-	collection := database.DB.Collection("social_media_user")
-
 	// 5. Siapkan data yang akan diperbarui
-	socialMediaID, err := primitive.ObjectIDFromHex(input.SocialMediaID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Social Media ID format"})
-		return
-	}
-
 	update := bson.M{
 		"$set": bson.M{
 			"link":            input.Link,
@@ -278,6 +324,21 @@ func UpdateSocialMediaUser(c *gin.Context) {
 	})
 }
 
+// UpdateSocialMediaUserStatus godoc
+// @Summary Toggle social media user link active status
+// @Description Update the active status of a social media user link by ID for the owner
+// @Tags social_media_user
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param socialmedia_id path string true "Social Media User ID"
+// @Param status body models.SocialMediaUserStatusUpdateInput true "Updated status"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /social-media-user/{socialmedia_id}/status [patch]
 func UpdateSocialMediaUserStatus(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -339,6 +400,19 @@ func UpdateSocialMediaUserStatus(c *gin.Context) {
 	})
 }
 
+// DeleteSocialMediaUser godoc
+// @Summary Delete a social media user link
+// @Description Delete a social media user link entry by ID for the owner
+// @Tags social_media_user
+// @Produce  json
+// @Security BearerAuth
+// @Param socialmedia_id path string true "Social Media User ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /social-media-user/{socialmedia_id} [delete]
 func DeleteSocialMediaUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

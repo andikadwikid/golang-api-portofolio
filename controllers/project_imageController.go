@@ -234,20 +234,29 @@ func UpdateProjectImage(c *gin.Context) {
 	newProjectIDParam := c.PostForm("project_id")
 	if newProjectIDParam != "" {
 		newProjectID, err := primitive.ObjectIDFromHex(newProjectIDParam)
-		if err == nil {
-			// Validate new project ownership
-			var newProject models.Project
-			err = projectCollection.FindOne(ctx, bson.M{"_id": newProjectID, "is_deleted": false}).Decode(&newProject)
-			if err == nil {
-				err = portofolioCollection.FindOne(ctx, bson.M{"_id": newProject.PortofolioID, "user_id": userID, "is_deleted": false}).Err()
-			}
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Project ID format"})
+			return
+		}
 
-			if err != nil {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized to associate image with new project"})
+		var newProject models.Project
+		err = projectCollection.FindOne(ctx, bson.M{"_id": newProjectID, "is_deleted": false}).Decode(&newProject)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Project not found"})
 				return
 			}
-			update["project_id"] = newProjectID
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching project"})
+			return
 		}
+
+		err = portofolioCollection.FindOne(ctx, bson.M{"_id": newProject.PortofolioID, "user_id": userID, "is_deleted": false}).Err()
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized to associate image with new project"})
+			return
+		}
+
+		update["project_id"] = newProjectID
 	}
 
 	// Handle file upload
@@ -263,6 +272,10 @@ func UpdateProjectImage(c *gin.Context) {
 
 		// Save new file
 		uploadDir := "./public/uploads/project_images"
+		if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
+			return
+		}
 		filename := fmt.Sprintf("%d_%s%s", time.Now().UnixNano(), primitive.NewObjectID().Hex(), ext)
 		filePath := filepath.Join(uploadDir, filename)
 

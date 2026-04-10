@@ -29,6 +29,55 @@ definitions:
     - password
     - username
     type: object
+  models.PortofolioInput:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  models.PortofolioStatusInput:
+    properties:
+      is_active:
+        type: boolean
+    type: object
+  models.ProjectImageStatusInput:
+    properties:
+      is_active:
+        type: boolean
+    type: object
+  models.ProjectInput:
+    properties:
+      description:
+        type: string
+      link:
+        type: string
+      name:
+        type: string
+      portofolio_id:
+        type: string
+    required:
+    - description
+    - name
+    - portofolio_id
+    type: object
+  models.ProjectStatusInput:
+    properties:
+      is_active:
+        type: boolean
+    type: object
+  models.ProjectUpdateInput:
+    properties:
+      description:
+        type: string
+      link:
+        type: string
+      name:
+        type: string
+    required:
+    - description
+    - name
+    type: object
   models.SocialMediaCreateInput:
     properties:
       createdAt:
@@ -54,6 +103,31 @@ definitions:
     required:
     - icon
     - name
+    type: object
+  models.SocialMediaUserInput:
+    properties:
+      link:
+        type: string
+      social_media_id:
+        type: string
+    required:
+    - link
+    - social_media_id
+    type: object
+  models.SocialMediaUserStatusUpdateInput:
+    properties:
+      is_active:
+        type: boolean
+    type: object
+  models.SocialMediaUserUpdateInput:
+    properties:
+      link:
+        type: string
+      social_media_id:
+        type: string
+    required:
+    - link
+    - social_media_id
     type: object
   models.UpdateUserInput:
     properties:
@@ -119,6 +193,703 @@ info:
   title: Portfolio API
   version: "1.0"
 paths:
+  /portofolio:
+    get:
+      description: Get all portofolios for the authenticated user where is_deleted
+        is false
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all portofolios by Auth user
+      tags:
+      - portofolio
+    post:
+      consumes:
+      - application/json
+      description: Create a new portofolio entry for the authenticated user
+      parameters:
+      - description: Portofolio details
+        in: body
+        name: portofolio
+        required: true
+        schema:
+          $ref: '#/definitions/models.PortofolioInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new portofolio
+      tags:
+      - portofolio
+  /portofolio/{portofolio_id}:
+    delete:
+      description: Soft delete a portofolio entry by ID for the authenticated user
+      parameters:
+      - description: Portofolio ID
+        in: path
+        name: portofolio_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a portofolio entry
+      tags:
+      - portofolio
+    put:
+      consumes:
+      - application/json
+      description: Update portfolio details by ID for the authenticated user
+      parameters:
+      - description: Portofolio ID
+        in: path
+        name: portofolio_id
+        required: true
+        type: string
+      - description: Updated portofolio details
+        in: body
+        name: portofolio
+        required: true
+        schema:
+          $ref: '#/definitions/models.PortofolioInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a portofolio entry
+      tags:
+      - portofolio
+  /portofolio/{portofolio_id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Toggle the active status of a portofolio entry by ID for the authenticated
+        user
+      parameters:
+      - description: Portofolio ID
+        in: path
+        name: portofolio_id
+        required: true
+        type: string
+      - description: Updated portofolio status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/models.PortofolioStatusInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update portofolio status (is_active)
+      tags:
+      - portofolio
+  /portofolio/all:
+    get:
+      description: Retrieve a list of all portfolios that are marked as active and
+        not deleted
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all active portfolios
+      tags:
+      - portofolio
+  /portofolio/user/{user_id}:
+    get:
+      description: Get all active portofolios for a specific user ID where is_deleted
+        is false
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all portofolios by User ID
+      tags:
+      - portofolio
+  /project:
+    post:
+      consumes:
+      - application/json
+      description: Create a new project entry associated with a specific portfolio
+        ID owned by the user
+      parameters:
+      - description: Project details
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new project for a portfolio
+      tags:
+      - project
+  /project/{project_id}:
+    delete:
+      description: Soft delete a project entry by project ID for the owner of the
+        associated portfolio
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a project
+      tags:
+      - project
+    put:
+      consumes:
+      - application/json
+      description: Update project name, description, and link by project ID for the
+        owner of the associated portfolio
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Updated project details
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectUpdateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update project details
+      tags:
+      - project
+  /project/{project_id}/images:
+    get:
+      description: Retrieve all active images associated with a specific project ID
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get images by Project ID
+      tags:
+      - project_image
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload multiple images (jpg, jpeg, png) for a specific project
+        owned by the user
+      parameters:
+      - description: Project ID
+        in: formData
+        name: project_id
+        required: true
+        type: string
+      - description: Project images (multiple)
+        in: formData
+        name: images
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Upload multiple images for a project
+      tags:
+      - project_image
+  /project/{project_id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Toggle the active status of a project by project ID for the owner
+        of the associated portfolio
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Updated project status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectStatusInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update project active status
+      tags:
+      - project
+  /project/images/{image_id}:
+    delete:
+      description: Soft delete a project image by ID for the owner of the associated
+        portfolio
+      parameters:
+      - description: Image ID
+        in: path
+        name: image_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a project image
+      tags:
+      - project_image
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update project image file or associated project ID. If a new image
+        is uploaded, the old one is deleted.
+      parameters:
+      - description: Image ID
+        in: path
+        name: image_id
+        required: true
+        type: string
+      - description: New project image
+        in: formData
+        name: image
+        type: file
+      - description: New Project ID
+        in: formData
+        name: project_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a project image
+      tags:
+      - project_image
+  /project/images/{image_id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update the active status of a project image by ID for the owner
+        of the associated portfolio
+      parameters:
+      - description: Image ID
+        in: path
+        name: image_id
+        required: true
+        type: string
+      - description: Updated status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectImageStatusInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Toggle project image active status
+      tags:
+      - project_image
+  /project/images/my:
+    get:
+      description: Retrieve all project images belonging to the authenticated user
+        using aggregation
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all my project images
+      tags:
+      - project_image
+  /project/portofolio/{portofolio_id}:
+    get:
+      description: Retrieve a list of all projects associated with a specific portfolio
+        ID
+      parameters:
+      - description: Portfolio ID
+        in: path
+        name: portofolio_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all projects by Portfolio ID
+      tags:
+      - project
   /social-media:
     get:
       description: Retrieve a list of all active social media entries
@@ -177,6 +948,248 @@ paths:
       summary: Create a new social media entry
       tags:
       - social_media
+  /social-media-user:
+    post:
+      consumes:
+      - application/json
+      description: Link an authenticated user to a specific social media platform
+        with a link
+      parameters:
+      - description: Social media user link details
+        in: body
+        name: social_media_user
+        required: true
+        schema:
+          $ref: '#/definitions/models.SocialMediaUserInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new social media user link
+      tags:
+      - social_media_user
+  /social-media-user/{socialmedia_id}:
+    delete:
+      description: Delete a social media user link entry by ID for the owner
+      parameters:
+      - description: Social Media User ID
+        in: path
+        name: socialmedia_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a social media user link
+      tags:
+      - social_media_user
+    put:
+      consumes:
+      - application/json
+      description: Update the link or platform for an existing social media user link
+        by ID
+      parameters:
+      - description: Social Media User ID
+        in: path
+        name: socialmedia_id
+        required: true
+        type: string
+      - description: Updated link details
+        in: body
+        name: social_media_user
+        required: true
+        schema:
+          $ref: '#/definitions/models.SocialMediaUserUpdateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a social media user link
+      tags:
+      - social_media_user
+  /social-media-user/{socialmedia_id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update the active status of a social media user link by ID for
+        the owner
+      parameters:
+      - description: Social Media User ID
+        in: path
+        name: socialmedia_id
+        required: true
+        type: string
+      - description: Updated status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/models.SocialMediaUserStatusUpdateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Toggle social media user link active status
+      tags:
+      - social_media_user
+  /social-media-user/me:
+    get:
+      description: Retrieve all social media links associated with the currently authenticated
+        user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get authenticated user's social media links
+      tags:
+      - social_media_user
+  /social-media-user/user/{user_id}:
+    get:
+      description: Retrieve all active social media links associated with a specific
+        user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get social media links by User ID
+      tags:
+      - social_media_user
   /social-media/{id}:
     delete:
       description: Soft delete a social media entry by ID
@@ -212,6 +1225,40 @@ paths:
       security:
       - BearerAuth: []
       summary: Delete a social media entry
+      tags:
+      - social_media
+    get:
+      description: Retrieve a single social media entry by its ID
+      parameters:
+      - description: Social Media ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a social media entry by ID
       tags:
       - social_media
     put:

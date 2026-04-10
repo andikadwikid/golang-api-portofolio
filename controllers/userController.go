@@ -122,7 +122,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	// email := strings.ToLower(strings.TrimSpace(input.Email))
+	input.Email = strings.ToLower(strings.TrimSpace(input.Email))
 
 	collection := database.DB.Collection("users")
 
@@ -174,24 +174,25 @@ func GetUsers(c *gin.Context) {
 	}
 	defer cursor.Close(ctx)
 
-	var users []models.UserResponse
+	var users []models.User
 	if err := cursor.All(ctx, &users); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error parsing users"})
 		return
 	}
 
-	var userslist []models.UserResponse
+	usersList := make([]models.UserResponse, 0, len(users))
 	for _, u := range users {
-		userslist = append(userslist, models.UserResponse{
-			ID:        u.ID,
+		usersList = append(usersList, models.UserResponse{
+			ID:        u.ID.Hex(),
 			Name:      u.Name,
+			Username:  u.Username,
 			Email:     u.Email,
 			Avatar:    u.Avatar,
 			Bio:       u.Bio,
 			CreatedAt: u.CreatedAt,
 		})
 	}
-	c.JSON(http.StatusOK, userslist)
+	c.JSON(http.StatusOK, usersList)
 
 }
 
@@ -231,28 +232,40 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	email := strings.ToLower(strings.TrimSpace(*input.Email))
+	setFields := bson.M{
+		"updated_at": time.Now(),
+	}
 
+	if input.Name != nil {
+		setFields["name"] = *input.Name
+	}
+	if input.Username != nil {
+		setFields["username"] = *input.Username
+	}
+	if input.Email != nil {
+		setFields["email"] = strings.ToLower(strings.TrimSpace(*input.Email))
+	}
 	if input.Password != nil {
 		hashedPassword, err := utils.HashPassword(*input.Password)
-
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 			return
 		}
-		input.Password = &hashedPassword
+		setFields["password"] = hashedPassword
+	}
+	if input.Avatar != nil {
+		setFields["avatar"] = *input.Avatar
+	}
+	if input.Bio != nil {
+		setFields["bio"] = *input.Bio
 	}
 
-	update := bson.M{
-		"$set": bson.M{
-			"name":       input.Name,
-			"username":   input.Username,
-			"email":      email,
-			"avatar":     input.Avatar,
-			"bio":        input.Bio,
-			"updated_at": time.Now(),
-		},
+	if len(setFields) == 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No fields to update"})
+		return
 	}
+
+	update := bson.M{"$set": setFields}
 
 	result, err := collection.UpdateOne(ctx, bson.M{"_id": id}, update)
 	if err != nil {
