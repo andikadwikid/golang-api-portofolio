@@ -4,34 +4,27 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"portofolio-api/config"
 )
 
 var DB *mongo.Database
 
 func Connect() {
-	// Memuat .env jika ada (biasanya untuk pengembangan lokal)
-	godotenv.Load()
-
-	// Get URI and database name from environment variables
-	mongoURI := os.Getenv("MONGO_URI")
-	databaseName := os.Getenv("MONGO_DB")
-
-	if mongoURI == "" {
-		log.Fatal("❌ MONGO_URI is not set in environment")
-	}
-	if databaseName == "" {
-		log.Fatal("❌ MONGO_DB is not set in environment")
-	}
+	// Use config from global variable
+	mongoURI := config.Config.MongoURI
+	databaseName := config.Config.MongoDB
 
 	// Set up connection options
-	clientOptions := options.Client().ApplyURI(mongoURI)
+	clientOptions := options.Client().ApplyURI(mongoURI).
+		SetMaxPoolSize(200).
+		SetMinPoolSize(20).
+		SetMaxConnIdleTime(1 * time.Minute)
 
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -58,6 +51,9 @@ func Connect() {
 
 func InitIndexes() {
 	SocialMediaIndexes()
+	PortofolioIndexes()
+	ProjectIndexes()
+	UserIndexes()
 }
 
 func SocialMediaIndexes() {
@@ -68,13 +64,58 @@ func SocialMediaIndexes() {
 			Keys:    bson.M{"name": 1},
 			Options: options.Index().SetUnique(true),
 		},
-		// {
-		// 	Keys:    bson.M{"username": 1},
-		// 	Options: options.Index().SetUnique(true),
-		// },
 	}
 
-	_, err := DB.Collection("social_media").Indexes().CreateMany(ctx, indexes)
+	_, err := DB.Collection(config.CollectionSocialMedia).Indexes().CreateMany(ctx, indexes)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func PortofolioIndexes() {
+	ctx := context.Background()
+
+	indexes := []mongo.IndexModel{
+		{
+			Keys: bson.D{{Key: "user_id", Value: 1}, {Key: "is_deleted", Value: 1}},
+		},
+		{
+			Keys: bson.D{{Key: "is_active", Value: 1}, {Key: "is_deleted", Value: 1}},
+		},
+	}
+
+	_, err := DB.Collection(config.CollectionPortofolio).Indexes().CreateMany(ctx, indexes)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func ProjectIndexes() {
+	ctx := context.Background()
+
+	indexes := []mongo.IndexModel{
+		{
+			Keys: bson.D{{Key: "portofolio_id", Value: 1}, {Key: "is_deleted", Value: 1}},
+		},
+	}
+
+	_, err := DB.Collection(config.CollectionProject).Indexes().CreateMany(ctx, indexes)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func UserIndexes() {
+	ctx := context.Background()
+
+	indexes := []mongo.IndexModel{
+		{
+			Keys:    bson.M{"email": 1},
+			Options: options.Index().SetUnique(true),
+		},
+	}
+
+	_, err := DB.Collection(config.CollectionUsers).Indexes().CreateMany(ctx, indexes)
 	if err != nil {
 		log.Fatal(err)
 	}

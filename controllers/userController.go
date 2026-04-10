@@ -11,59 +11,56 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
+	"portofolio-api/config"
 	"portofolio-api/database"
 	"portofolio-api/models"
+	"portofolio-api/repositories"
 	"portofolio-api/utils"
 )
 
+type UserController struct {
+	userRepo repositories.UserRepository
+}
+
+func NewUserController(userRepo repositories.UserRepository) *UserController {
+	return &UserController{
+		userRepo: userRepo,
+	}
+}
+
 // RegisterUser godoc
-// @Summary Register a new user
-// @Description Register a new user with the provided details
-// @Tags users
-// @Accept  json
-// @Produce  json
-// @Param user body models.CreateUserInput true "User registration details"
-// @Success 201 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
-// @Router /users/register [post]
-func RegisterUser(c *gin.Context) {
+func (ctrl *UserController) RegisterUser(c *gin.Context) {
 	var input models.CreateUserInput
 
 	// Bind & validate
 	if err := c.ShouldBindJSON(&input); err != nil {
 		validationErrors := utils.FormatValidationError(err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"errors": validationErrors,
-		})
+		utils.ErrorResponse(c, http.StatusBadRequest, "Validation failed", validationErrors)
 		return
 	}
 
 	// Normalize email
 	input.Email = strings.ToLower(strings.TrimSpace(input.Email))
 
-	collection := database.DB.Collection("users")
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// Check existing email
-	var existingUser models.User
-	err := collection.FindOne(ctx, bson.M{"email": input.Email}).Decode(&existingUser)
+	_, err := ctrl.userRepo.FindByEmail(ctx, input.Email)
 
 	if err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already registered"})
+		utils.ErrorResponse(c, http.StatusBadRequest, "Email already registered", nil)
 		return
 	}
 	if err != mongo.ErrNoDocuments {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 
 	// Hash password
 	hashedPassword, err := utils.HashPassword(input.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to hash password", nil)
 		return
 	}
 
@@ -80,229 +77,154 @@ func RegisterUser(c *gin.Context) {
 		UpdatedAt: time.Now(),
 	}
 
-	// Insert ke Mongo
-	result, err := collection.InsertOne(ctx, user)
+	// Insert ke Mongo via Repo
+	err = ctrl.userRepo.Create(ctx, &user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 
-	// Convert ID ke string
-	insertedID := result.InsertedID.(primitive.ObjectID)
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "User registered successfully",
-		"id":      insertedID.Hex(),
+	utils.SuccessResponse(c, http.StatusCreated, "User registered successfully", gin.H{
+		"id": user.ID.Hex(),
 	})
 }
 
 // LoginUser godoc
-// @Summary Login user
-// @Description Login with email and password to get JWT token
-// @Tags users
-// @Accept  json
-// @Produce  json
-// @Param login body models.UserLoginInput true "Login credentials"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 401 {object} map[string]interface{}
-// @Failure 404 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
-// @Router /users/login [post]
-func LoginUser(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
+func (ctrl *UserController) LoginUser(c *gin.Context) {
 	var input models.UserLoginInput
+
 	if err := c.ShouldBindJSON(&input); err != nil {
-		validationErrors := utils.FormatValidationError(err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"errors": validationErrors,
-		})
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid input", err.Error())
 		return
 	}
 
-	// email := strings.ToLower(strings.TrimSpace(input.Email))
+	input.Email = strings.ToLower(strings.TrimSpace(input.Email))
 
-	collection := database.DB.Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	var user models.UserLoginInput
-	err := collection.FindOne(ctx, bson.M{"email": input.Email}).Decode(&user)
-
+	// Find user by email via Repo
+	user, err := ctrl.userRepo.FindByEmail(ctx, input.Email)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			utils.ErrorResponse(c, http.StatusUnauthorized, "Invalid email or password", nil)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 
 	// Check password
-	if !utils.CheckPasswordHash(input.Password, user.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+	if !utils.CheckPassword(input.Password, user.Password) {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Invalid email or password", nil)
 		return
 	}
 
-	// Generate JWT
-	token, err := utils.GenerateJWT(user.ID)
+	// Generate JWT via Config
+	token, err := utils.GenerateToken(user.ID.Hex(), string(config.Config.JWTSecret))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to generate token", nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	utils.SuccessResponse(c, http.StatusOK, "Login successful", gin.H{
+		"token": token,
+		"user": gin.H{
+			"id":       user.ID.Hex(),
+			"name":     user.Name,
+			"username": user.Username,
+			"email":    user.Email,
+		},
+	})
 }
 
 // GetUsers godoc
-// @Summary Get all users
-// @Description Retrieve a list of all registered users
-// @Tags users
-// @Produce  json
-// @Success 200 {array} models.UserResponse
-// @Failure 500 {object} map[string]interface{}
-// @Router /users [get]
-func GetUsers(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (ctrl *UserController) GetUsers(c *gin.Context) {
+	collection := database.DB.Collection(config.CollectionUsers)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	collection := database.DB.Collection("users")
 	cursor, err := collection.Find(ctx, bson.M{})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error fetching users"})
+		utils.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 	defer cursor.Close(ctx)
 
 	var users []models.UserResponse
 	if err := cursor.All(ctx, &users); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error parsing users"})
+		utils.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 
-	var userslist []models.UserResponse
-	for _, u := range users {
-		userslist = append(userslist, models.UserResponse{
-			ID:        u.ID,
-			Name:      u.Name,
-			Email:     u.Email,
-			Avatar:    u.Avatar,
-			Bio:       u.Bio,
-			CreatedAt: u.CreatedAt,
-		})
-	}
-	c.JSON(http.StatusOK, userslist)
-
+	utils.SuccessResponse(c, http.StatusOK, "Users fetched successfully", users)
 }
 
 // UpdateUser godoc
-// @Summary Update user details
-// @Description Update user details by ID
-// @Tags users
-// @Accept  json
-// @Produce  json
-// @Security BearerAuth
-// @Param id path string true "User ID"
-// @Param user body models.UpdateUserInput true "Updated user details"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 404 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
-// @Router /users/{id} [put]
-func UpdateUser(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	collection := database.DB.Collection("users")
-
-	idParam := c.Param("id")
-	id, err := primitive.ObjectIDFromHex(idParam)
+func (ctrl *UserController) UpdateUser(c *gin.Context) {
+	id := c.Param("id")
+	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid ID format", nil)
 		return
 	}
 
 	var input models.UpdateUserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		validationErrors := utils.FormatValidationError(err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"errors": validationErrors,
-		})
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid input", err.Error())
 		return
 	}
 
-	email := strings.ToLower(strings.TrimSpace(*input.Email))
-
-	if input.Password != nil {
-		hashedPassword, err := utils.HashPassword(*input.Password)
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-			return
-		}
-		input.Password = &hashedPassword
+	update := bson.M{}
+	if input.Name != nil {
+		update["name"] = *input.Name
 	}
-
-	update := bson.M{
-		"$set": bson.M{
-			"name":       input.Name,
-			"username":   input.Username,
-			"email":      email,
-			"avatar":     input.Avatar,
-			"bio":        input.Bio,
-			"updated_at": time.Now(),
-		},
+	if input.Username != nil {
+		update["username"] = *input.Username
 	}
+	if input.Email != nil {
+		update["email"] = *input.Email
+	}
+	if input.Avatar != nil {
+		update["avatar"] = *input.Avatar
+	}
+	if input.Bio != nil {
+		update["bio"] = *input.Bio
+	}
+	update["updated_at"] = time.Now()
 
-	result, err := collection.UpdateOne(ctx, bson.M{"_id": id}, update)
+	collection := database.DB.Collection(config.CollectionUsers)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": update})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 
-	if result.MatchedCount == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "User updated"})
+	utils.SuccessResponse(c, http.StatusOK, "User updated successfully", nil)
 }
 
 // DeleteUser godoc
-// @Summary Delete a user
-// @Description Delete a user by ID
-// @Tags users
-// @Produce  json
-// @Security BearerAuth
-// @Param id path string true "User ID"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 404 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
-// @Router /users/{id} [delete]
-func DeleteUser(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (ctrl *UserController) DeleteUser(c *gin.Context) {
+	id := c.Param("id")
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid ID format", nil)
+		return
+	}
+
+	collection := database.DB.Collection(config.CollectionUsers)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	collection := database.DB.Collection("users")
-
-	idParam := c.Param("id")
-	id, err := primitive.ObjectIDFromHex(idParam)
+	_, err = collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		utils.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 
-	result, err := collection.DeleteOne(ctx, bson.M{"_id": id})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if result.DeletedCount == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "User deleted"})
+	utils.SuccessResponse(c, http.StatusOK, "User deleted successfully", nil)
 }

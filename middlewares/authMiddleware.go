@@ -3,16 +3,17 @@ package middlewares
 import (
 	"errors"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+
+	"portofolio-api/config"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
+		jwtSecret := config.Config.JWTSecret
 
 		authHeader := c.GetHeader("Authorization")
 
