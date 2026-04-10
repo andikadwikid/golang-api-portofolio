@@ -49,6 +49,8 @@ func main() {
 	routes.ProjectRoutes(r)
 	routes.EducationRoutes(r)
 	routes.CertificateRoutes(r)
+	routes.SkillRoutes(r)
+	routes.JobHistoryRoutes(r)
 
 	// Serve static files
 	r.Static("/public", "./public")
