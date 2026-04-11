@@ -11,6 +11,8 @@ import (
 	"portofolio-api/database"
 	_ "portofolio-api/docs"
 	"portofolio-api/routes"
+
+	"github.com/gin-contrib/cors"
 )
 
 // @title Portfolio API
@@ -38,6 +40,15 @@ func main() {
 	database.Connect()
 
 	r := gin.Default()
+
+	// CORS Configuration
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000", "https://api-portofolio.declarationdigital.tech"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	// Swagger route
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
