@@ -1,0 +1,81 @@
+package config
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"time"
+
+	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+var DB *mongo.Database
+
+func Connect() {
+	// Memuat .env jika ada (biasanya untuk pengembangan lokal)
+	godotenv.Load()
+
+	// Get URI and database name from environment variables
+	mongoURI := os.Getenv("MONGO_URI")
+	databaseName := os.Getenv("MONGO_DB")
+
+	if mongoURI == "" {
+		log.Fatal("❌ MONGO_URI is not set in environment")
+	}
+	if databaseName == "" {
+		log.Fatal("❌ MONGO_DB is not set in environment")
+	}
+
+	// Set up connection options
+	clientOptions := options.Client().ApplyURI(mongoURI)
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(ctx, clientOptions)
+	if err != nil {
+		log.Fatal("❌ MongoDB connection error:", err)
+	}
+
+	// Ping the database to test connection
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatal("❌ MongoDB ping error:", err)
+	}
+
+	fmt.Println("✅ Connected to MongoDB Atlas!")
+
+	// Set the selected database
+	DB = client.Database(databaseName)
+	InitIndexes()
+}
+
+func InitIndexes() {
+	SocialMediaIndexes()
+}
+
+func SocialMediaIndexes() {
+	ctx := context.Background()
+
+	indexes := []mongo.IndexModel{
+		{
+			Keys:    bson.M{"name": 1},
+			Options: options.Index().SetUnique(true),
+		},
+		// {
+		// 	Keys:    bson.M{"username": 1},
+		// 	Options: options.Index().SetUnique(true),
+		// },
+	}
+
+	_, err := DB.Collection("social_media").Indexes().CreateMany(ctx, indexes)
+	if err != nil {
+		log.Fatal(err)
+	}
+}

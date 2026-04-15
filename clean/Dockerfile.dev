@@ -18,9 +18,9 @@ RUN go mod tidy
 COPY . .
 
 # Generate initial swagger
-RUN /go/bin/swag init
+# RUN /go/bin/swag init
 
 EXPOSE 8081
 
 # Jalankan Air secara default
-CMD ["/go/bin/air"]
+CMD ["/go/bin/air", "-c", ".air.toml"]
