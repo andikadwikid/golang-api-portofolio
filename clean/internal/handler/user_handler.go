@@ -52,3 +52,43 @@ func (h *UserHandler) RegisterUser(c *gin.Context) {
 		"id":      user.ID.Hex(),
 	})
 }
+
+func (h *UserHandler) LoginUser(c *gin.Context) {
+	var input domain.UserLoginInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		validationErrors := utils.FormatValidationError(err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errors": validationErrors,
+		})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	token, err := h.userService.Login(ctx, input)
+	if err != nil {
+		if err.Error() == "user not found" || err.Error() == "invalid email or password" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func (h *UserHandler) GetAllUsers(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	user, err := h.userService.GetAllUsers(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"users": user})
+}

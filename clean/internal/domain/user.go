@@ -49,7 +49,7 @@ type UserResponse struct {
 	Name      string    `json:"name"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
-	Avatar    string    `json:"avatar,omitempty"`
-	Bio       string    `json:"bio,omitempty"`
+	Avatar    string    `json:"avatar"`
+	Bio       string    `json:"bio"`
 	CreatedAt time.Time `json:"created_at"`
 }

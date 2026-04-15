@@ -15,6 +15,7 @@ import (
 type UserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
 	Create(ctx context.Context, user *domain.User) (primitive.ObjectID, error)
+	GetAllUsers(ctx context.Context) ([]domain.User, error)
 }
 
 type userRepository struct {
@@ -47,4 +48,19 @@ func (r *userRepository) Create(ctx context.Context, user *domain.User) (primiti
 	}
 
 	return result.InsertedID.(primitive.ObjectID), nil
+}
+
+func (r *userRepository) GetAllUsers(ctx context.Context) ([]domain.User, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var users []domain.User
+	if err := cursor.All(ctx, &users); err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
