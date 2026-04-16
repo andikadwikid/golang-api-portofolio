@@ -92,3 +92,50 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"users": user})
 }
+
+func (h *UserHandler) UpdateUser(c *gin.Context) {
+	id := c.Param("id")
+	var input domain.UpdateUserInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		validationErrors := utils.FormatValidationError(err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errors": validationErrors,
+		})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := h.userService.Update(ctx, id, input)
+	if err != nil {
+		if err.Error() == "user not found" || err.Error() == "invalid id" || err.Error() == "no fields to update" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully"})
+}
+
+func (h *UserHandler) DeleteUser(c *gin.Context) {
+	id := c.Param("id")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := h.userService.Delete(ctx, id)
+	if err != nil {
+		if err.Error() == "user not found" || err.Error() == "invalid id" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+}
