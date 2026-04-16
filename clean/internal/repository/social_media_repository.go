@@ -20,7 +20,7 @@ type socialMediaRepository struct {
 	collection *mongo.Collection
 }
 
-func NewSocialMediaRepository(collection *mongo.Collection) SocialMediaRepository {
+func NewSocialMediaRepository() SocialMediaRepository {
 	return &socialMediaRepository{
 		collection: config.DB.Collection("social_media"),
 	}

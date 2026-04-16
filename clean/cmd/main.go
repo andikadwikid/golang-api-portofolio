@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
 	"portofolio-api/clean/config"
@@ -16,19 +17,19 @@ import (
 func main() {
 	godotenv.Load()
 
-	// 1. Koneksi DB
 	config.Connect()
 
-	// 2. Repository — hanya tahu MongoDB
-	userRepo := repository.NewUserRepository(config.DB.Collection("users"))
-
-	// 3. Service — hanya tahu Repository
+	userRepo := repository.NewUserRepository()
 	userService := service.NewUserService(userRepo)
-
-	// 4. Handler — hanya tahu Service
 	userHandler := handler.NewUserHandler(userService)
 
-	r := router.UserRoutes(userHandler)
+	socialMediaRepo := repository.NewSocialMediaRepository()
+	socialMediaService := service.NewSocialMediaService(socialMediaRepo)
+	socialMediaHandler := handler.NewSocialMediaHandler(socialMediaService)
+
+	r := gin.Default()
+	router.UserRoutes(r, userHandler)
+	router.SocialMediaRouter(r, socialMediaHandler)
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {

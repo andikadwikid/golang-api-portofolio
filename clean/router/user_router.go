@@ -9,9 +9,7 @@ import (
 	"portofolio-api/clean/internal/middleware"
 )
 
-func UserRoutes(userHandler *handler.UserHandler) *gin.Engine {
-	r := gin.Default()
-
+func UserRoutes(r *gin.Engine, userHandler *handler.UserHandler) {
 	// Health check global (biasanya di root)
 	r.GET("/health", healthCheck)
 
@@ -33,7 +31,6 @@ func UserRoutes(userHandler *handler.UserHandler) *gin.Engine {
 		protected.DELETE("/:id", userHandler.DeleteUser)
 	}
 
-	return r
 }
 
 // handler kecil dipisah (biar reusable & clean)
