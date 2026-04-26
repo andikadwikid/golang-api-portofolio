@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
@@ -11,8 +12,6 @@ import (
 	"portofolio-api/database"
 	_ "portofolio-api/docs"
 	"portofolio-api/routes"
-
-	"github.com/gin-contrib/cors"
 )
 
 // @title Portfolio API
@@ -27,7 +26,7 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host localhost:8081
+// @host https://api-portofolio.declarationdigital.tech
 // @BasePath /
 // @securityDefinitions.apikey BearerAuth
 // @in header
