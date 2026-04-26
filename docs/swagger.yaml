@@ -179,7 +179,7 @@ definitions:
       username:
         type: string
     type: object
-host: https://api-portofolio.declarationdigital.tech
+host: api-portofolio.declarationdigital.tech
 info:
   contact:
     email: support@swagger.io

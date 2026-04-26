@@ -15,7 +15,7 @@
         },
         "version": "1.0"
     },
-    "host": "https://api-portofolio.declarationdigital.tech",
+    "host": "api-portofolio.declarationdigital.tech",
     "basePath": "/",
     "paths": {
         "/portofolio": {

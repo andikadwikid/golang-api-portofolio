@@ -2206,7 +2206,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "https://api-portofolio.declarationdigital.tech",
+	Host:             "api-portofolio.declarationdigital.tech",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Portfolio API",
