@@ -11,6 +11,7 @@ func ProjectRoutes(r *gin.Engine) {
 	project := r.Group("/project")
 	{
 		// Project
+		project.POST("", middlewares.AuthMiddleware(), controllers.CreateProjectPortofolio)
 		project.POST("/", middlewares.AuthMiddleware(), controllers.CreateProjectPortofolio)
 		project.GET("/portofolio/:portofolio_id", controllers.GetProjectsByPortofolioID)
 		project.PUT("/:project_id", middlewares.AuthMiddleware(), controllers.UpdateProject)

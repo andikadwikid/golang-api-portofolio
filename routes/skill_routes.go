@@ -10,6 +10,7 @@ import (
 func SkillRoutes(r *gin.Engine) {
 	skill := r.Group("/skill")
 	{
+		skill.POST("", middlewares.AuthMiddleware(), controllers.CreateSkill)
 		skill.POST("/", middlewares.AuthMiddleware(), controllers.CreateSkill)
 		skill.GET("/:id", middlewares.AuthMiddleware(), controllers.GetSkillByID)
 		skill.GET("/user/:user_id", middlewares.AuthMiddleware(), controllers.GetSkillsByUserID)

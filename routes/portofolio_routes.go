@@ -10,7 +10,9 @@ import (
 func PortofolioRoutes(r *gin.Engine) {
 	portofolio := r.Group("/portofolio")
 	{
+		portofolio.POST("", middlewares.AuthMiddleware(), controllers.CreatePortofolio)
 		portofolio.POST("/", middlewares.AuthMiddleware(), controllers.CreatePortofolio)
+		portofolio.GET("", middlewares.AuthMiddleware(), controllers.GetMyPortofolios)
 		portofolio.GET("/", middlewares.AuthMiddleware(), controllers.GetMyPortofolios)
 		portofolio.GET("/user/:user_id", middlewares.AuthMiddleware(), controllers.GetPortofolioByUserID)
 		portofolio.PUT("/:id", middlewares.AuthMiddleware(), controllers.UpdatePortofolio)

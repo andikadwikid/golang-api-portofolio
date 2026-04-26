@@ -1,5 +1,83 @@
 basePath: /
 definitions:
+  models.Certificate:
+    properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      organizer:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+      urlFile:
+        type: string
+      userID:
+        type: string
+      year:
+        type: string
+    type: object
+  models.CreateEducationInput:
+    properties:
+      degree:
+        type: string
+      description:
+        type: string
+      end_date:
+        type: string
+      faculty:
+        type: string
+      name:
+        type: string
+      score:
+        type: string
+      start_date:
+        type: string
+      user_id:
+        type: string
+    required:
+    - end_date
+    - name
+    - start_date
+    type: object
+  models.CreateJobHistoryInput:
+    properties:
+      company_name:
+        type: string
+      duration:
+        type: string
+      end_date:
+        type: string
+      is_current:
+        type: boolean
+      job_description:
+        type: string
+      position:
+        type: string
+      skill_ids:
+        items:
+          type: string
+        type: array
+      start_date:
+        type: string
+    required:
+    - company_name
+    - duration
+    - job_description
+    - position
+    - start_date
+    type: object
+  models.CreateSkillInput:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
   models.CreateUserInput:
     properties:
       avatar:
@@ -28,6 +106,60 @@ definitions:
     - name
     - password
     - username
+    type: object
+  models.Education:
+    properties:
+      createdAt:
+        type: string
+      degree:
+        type: string
+      description:
+        type: string
+      endDate:
+        type: string
+      faculty:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      score:
+        type: string
+      startDate:
+        type: string
+      updatedAt:
+        type: string
+      userID:
+        type: string
+    type: object
+  models.JobHistory:
+    properties:
+      companyName:
+        type: string
+      createdAt:
+        type: string
+      duration:
+        type: string
+      endDate:
+        type: string
+      id:
+        type: string
+      isCurrent:
+        type: boolean
+      jobDescription:
+        type: string
+      position:
+        type: string
+      skillIDs:
+        items:
+          type: string
+        type: array
+      startDate:
+        type: string
+      updatedAt:
+        type: string
+      userID:
+        type: string
     type: object
   models.PortofolioInput:
     properties:
@@ -77,6 +209,19 @@ definitions:
     required:
     - description
     - name
+    type: object
+  models.Skill:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+      userID:
+        type: string
     type: object
   models.SocialMediaCreateInput:
     properties:
@@ -128,6 +273,49 @@ definitions:
     required:
     - link
     - social_media_id
+    type: object
+  models.UpdateEducationInput:
+    properties:
+      degree:
+        type: string
+      description:
+        type: string
+      end_date:
+        type: string
+      faculty:
+        type: string
+      name:
+        type: string
+      score:
+        type: string
+      start_date:
+        type: string
+    type: object
+  models.UpdateJobHistoryInput:
+    properties:
+      company_name:
+        type: string
+      duration:
+        type: string
+      end_date:
+        type: string
+      is_current:
+        type: boolean
+      job_description:
+        type: string
+      position:
+        type: string
+      skill_ids:
+        items:
+          type: string
+        type: array
+      start_date:
+        type: string
+    type: object
+  models.UpdateSkillInput:
+    properties:
+      name:
+        type: string
     type: object
   models.UpdateUserInput:
     properties:
@@ -193,6 +381,622 @@ info:
   title: Portfolio API
   version: "1.0"
 paths:
+  /certificate:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new certificate entry for a user with file upload
+      parameters:
+      - description: Certificate Title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Certificate Organizer
+        in: formData
+        name: organizer
+        required: true
+        type: string
+      - description: Certificate Year
+        in: formData
+        name: year
+        required: true
+        type: string
+      - description: Certificate Description
+        in: formData
+        name: description
+        type: string
+      - description: Certificate file (pdf, png, jpg, jpeg)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new certificate entry
+      tags:
+      - certificate
+  /certificate/{id}:
+    delete:
+      description: Delete a certificate entry by ID for the owner
+      parameters:
+      - description: Certificate ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a certificate entry
+      tags:
+      - certificate
+    get:
+      description: Retrieve a single certificate entry by its ID
+      parameters:
+      - description: Certificate ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Certificate'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get certificate entry by ID
+      tags:
+      - certificate
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update a certificate entry by ID, optionally replacing the file
+      parameters:
+      - description: Certificate ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Certificate Title
+        in: formData
+        name: title
+        type: string
+      - description: Certificate Organizer
+        in: formData
+        name: organizer
+        type: string
+      - description: Certificate Year
+        in: formData
+        name: year
+        type: string
+      - description: Certificate Description
+        in: formData
+        name: description
+        type: string
+      - description: New certificate file (pdf, png, jpg, jpeg)
+        in: formData
+        name: file
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a certificate entry
+      tags:
+      - certificate
+  /certificate/user/{user_id}:
+    get:
+      description: Retrieve a list of all certificate entries for a specific user
+        ID
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Certificate'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all certificate entries for a user
+      tags:
+      - certificate
+  /education:
+    post:
+      consumes:
+      - application/json
+      description: Create a new education entry for a user
+      parameters:
+      - description: Education creation details
+        in: body
+        name: education
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateEducationInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new education entry
+      tags:
+      - education
+  /education/{id}:
+    delete:
+      description: Delete an education entry by ID
+      parameters:
+      - description: Education ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an education entry
+      tags:
+      - education
+    get:
+      description: Retrieve a single education entry by its ID
+      parameters:
+      - description: Education ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Education'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get education entry by ID
+      tags:
+      - education
+    put:
+      consumes:
+      - application/json
+      description: Update an education entry by ID
+      parameters:
+      - description: Education ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated education details
+        in: body
+        name: education
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateEducationInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an education entry
+      tags:
+      - education
+  /education/user/{user_id}:
+    get:
+      description: Retrieve a list of all education entries for a specific user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Education'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all education entries for a user
+      tags:
+      - education
+  /job-history:
+    post:
+      consumes:
+      - application/json
+      description: Create a new job history entry for a user
+      parameters:
+      - description: Job History creation details
+        in: body
+        name: job_history
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateJobHistoryInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new job history entry
+      tags:
+      - job_history
+  /job-history/{id}:
+    delete:
+      description: Delete a job history entry by ID
+      parameters:
+      - description: Job History ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a job history entry
+      tags:
+      - job_history
+    get:
+      description: Retrieve a single job history entry by its ID
+      parameters:
+      - description: Job History ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JobHistory'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get job history entry by ID
+      tags:
+      - job_history
+    put:
+      consumes:
+      - application/json
+      description: Update a job history entry by ID
+      parameters:
+      - description: Job History ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated job history details
+        in: body
+        name: job_history
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateJobHistoryInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a job history entry
+      tags:
+      - job_history
+  /job-history/user/{user_id}:
+    get:
+      description: Retrieve a list of all job history entries for a specific user
+        ID
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.JobHistory'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all job history entries for a user
+      tags:
+      - job_history
   /portofolio:
     get:
       description: Get all portofolios for the authenticated user where is_deleted
@@ -890,6 +1694,205 @@ paths:
       summary: Get all projects by Portfolio ID
       tags:
       - project
+  /skill:
+    post:
+      consumes:
+      - application/json
+      description: Create a new skill entry for a user
+      parameters:
+      - description: Skill creation details
+        in: body
+        name: skill
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateSkillInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new skill entry
+      tags:
+      - skill
+  /skill/{id}:
+    delete:
+      description: Delete a skill entry by ID
+      parameters:
+      - description: Skill ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a skill entry
+      tags:
+      - skill
+    get:
+      description: Retrieve a single skill entry by its ID
+      parameters:
+      - description: Skill ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Skill'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get skill entry by ID
+      tags:
+      - skill
+    put:
+      consumes:
+      - application/json
+      description: Update a skill entry by ID
+      parameters:
+      - description: Skill ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated skill details
+        in: body
+        name: skill
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateSkillInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a skill entry
+      tags:
+      - skill
+  /skill/user/{user_id}:
+    get:
+      description: Retrieve a list of all skill entries for a specific user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Skill'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all skill entries for a user
+      tags:
+      - skill
   /social-media:
     get:
       description: Retrieve a list of all active social media entries
@@ -901,11 +1904,18 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "500":
           description: Internal Server Error
           schema:
             additionalProperties: true
             type: object
+      security:
+      - BearerAuth: []
       summary: Get all social media entries
       tags:
       - social_media
@@ -1248,6 +2258,11 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "404":
           description: Not Found
           schema:
@@ -1258,6 +2273,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - BearerAuth: []
       summary: Get a social media entry by ID
       tags:
       - social_media

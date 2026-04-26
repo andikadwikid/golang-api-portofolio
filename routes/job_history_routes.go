@@ -10,6 +10,7 @@ import (
 func JobHistoryRoutes(r *gin.Engine) {
 	jobHistory := r.Group("/job-history")
 	{
+		jobHistory.POST("", middlewares.AuthMiddleware(), controllers.CreateJobHistory)
 		jobHistory.POST("/", middlewares.AuthMiddleware(), controllers.CreateJobHistory)
 		jobHistory.GET("/:id", middlewares.AuthMiddleware(), controllers.GetJobHistoryByID)
 		jobHistory.GET("/user/:user_id", middlewares.AuthMiddleware(), controllers.GetJobHistoryByUserID)

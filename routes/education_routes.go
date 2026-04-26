@@ -10,6 +10,7 @@ import (
 func EducationRoutes(r *gin.Engine) {
 	education := r.Group("/education")
 	{
+		education.POST("", middlewares.AuthMiddleware(), controllers.CreateEducation)
 		education.POST("/", middlewares.AuthMiddleware(), controllers.CreateEducation)
 		education.GET("/:id", middlewares.AuthMiddleware(), controllers.GetEducationByID)
 		education.GET("/user/:user_id", middlewares.AuthMiddleware(), controllers.GetEducationByUserID)

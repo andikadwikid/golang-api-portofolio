@@ -125,7 +125,9 @@ func CreateSocialMedia(c *gin.Context) {
 // @Description Retrieve a list of all active social media entries
 // @Tags social_media
 // @Produce  json
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /social-media [get]
 func GetSocialMedia(c *gin.Context) {
@@ -157,9 +159,11 @@ func GetSocialMedia(c *gin.Context) {
 // @Description Retrieve a single social media entry by its ID
 // @Tags social_media
 // @Produce  json
+// @Security BearerAuth
 // @Param id path string true "Social Media ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Failure 404 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /social-media/{id} [get]

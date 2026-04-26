@@ -10,6 +10,7 @@ import (
 func SocialMediaUserRoutes(r *gin.Engine) {
 	socialMediaUser := r.Group("/social-media-user")
 	{
+		socialMediaUser.POST("", middlewares.AuthMiddleware(), controllers.CreateSocialMediaUser)
 		socialMediaUser.POST("/", middlewares.AuthMiddleware(), controllers.CreateSocialMediaUser)
 		socialMediaUser.GET("/me", middlewares.AuthMiddleware(), controllers.GetMySocialMedia)
 		socialMediaUser.GET("/user/:user_id", middlewares.AuthMiddleware(), controllers.GetSocialMediaByUserID)

@@ -10,6 +10,7 @@ import (
 func CertificateRoutes(r *gin.Engine) {
 	certificate := r.Group("/certificate")
 	{
+		certificate.POST("", middlewares.AuthMiddleware(), controllers.CreateCertificate)
 		certificate.POST("/", middlewares.AuthMiddleware(), controllers.CreateCertificate)
 		certificate.GET("/:id", middlewares.AuthMiddleware(), controllers.GetCertificateByID)
 		certificate.GET("/user/:user_id", middlewares.AuthMiddleware(), controllers.GetCertificatesByUserID)
